@@ -66,8 +66,12 @@ function loadShopcard(data) {
     j_data = j_data.filter(function (a) { return a.shopcard })
     j_data.sort(function (a, b) {
         // 由大到小排序
-        return b.shopcard.description[0] - a.shopcard.description[0]
-    })
+        let a1 = a.shopcard.description;
+        let des_a1 = (a1[0] + a1[2] / 10000 * (a1[1] > 0 ? 1 : -1))
+        let b1 = b.shopcard.description;
+        let des_b1 = (b1[0] + b1[2] / 10000 * (b1[1] > 0 ? 1 : -1))
+        return des_b1 - des_a1
+    });
 
     for (let i = 0; i < j_data.length; i++) {
         var element = j_data[i];
