@@ -12,7 +12,7 @@
 
 
 function createShopInfoElement(itemElement, shopcard) {
-    var state = /\&style=(.*)/.exec(document.URL)[1] || 'grid';
+    var state = /\&style=(.*)/.exec(document.URL)[1].split('&')[0];
     var shopInfoElement = document.createElement('div');
     shopInfoElement.setAttribute('class', 'my-widget-shopinfo my-shopinfo-' + state);
 
@@ -58,7 +58,6 @@ function createShopInfoElement(itemElement, shopcard) {
 }
 
 
-
 function loadShopcard(data) {
 
     var re_p = /"auctions":([\s\S]*),"recommendAuctions"/;
@@ -98,19 +97,20 @@ function loadShopcard(data) {
 }
 
 $.ready(
-    $.get(document.URL, function (data, status) {
-        console.log('get data');
-        setInterval(() => {
-            if (document.querySelector('.score-box')) {
-                // 检查是否已经添加shopcard
-                return;
-            }
-            if (document.querySelector('.item .shop')) {
-                //等待元素渲染完成后添加shopcard
+    setInterval(() => {
+        if (document.querySelector('.score-box')) {
+            // 检查是否已经添加shopcard
+            return;
+        }
+        if (document.querySelector('.item .shop')) {
+            //等待元素渲染完成
+            $.get(document.URL, function (data, status) {
+                // 更改排序会产生 新的item,但是并没有reload页面，因此需要这里跟随渲染shopcard前，也要重新获取一次数据
+                console.log('get data');
                 loadShopcard(data);
-            }
-        }, 2000);
-    })
+            })
+        }
+    }, 2000)
 )
 
 
