@@ -12,7 +12,11 @@
 
 
 function createShopInfoElement(itemElement, shopcard) {
-    var state = /\&style=(.*)/.exec(document.URL)[1].split('&')[0];
+    if (itemElement.querySelector('.score-box')){
+        return;
+    }
+    var state = /\&style=(.*)/.exec(document.URL) || [0,'grid'];
+    state = state[1].split('&')[0];
     var shopInfoElement = document.createElement('div');
     shopInfoElement.setAttribute('class', 'my-widget-shopinfo my-shopinfo-' + state);
 
@@ -102,11 +106,7 @@ function loadShopcard(data) {
 
 $.ready(
     setInterval(() => {
-        if (document.querySelector('.score-box')) {
-            // 检查是否已经添加shopcard
-            return;
-        }
-        if (document.querySelector('.item .shop')) {
+        if ($.isReady && document.querySelector('.item .shop') && !document.querySelector('.score-box') ) {
             //等待元素渲染完成
             $.get(document.URL, function (data, status) {
                 // 更改排序会产生 新的item,但是并没有reload页面，因此需要这里跟随渲染shopcard前，也要重新获取一次数据
