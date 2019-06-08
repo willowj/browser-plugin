@@ -1,4 +1,3 @@
- 
 // ==UserScript==
 // @name         tabao_shopcard
 // @namespace    http://tampermonkey.net/tabao_shopcard
@@ -13,7 +12,7 @@
 
 
 function createShopInfoElement(itemElement, shopcard) {
-    var state = document.URL.search(/\&style=grid/) > 0 ? 'grid' : 'list';
+    var state = /\&style=(.*)/.exec(document.URL)[1] || 'grid';
     var shopInfoElement = document.createElement('div');
     shopInfoElement.setAttribute('class', 'my-widget-shopinfo my-shopinfo-' + state);
 
@@ -53,61 +52,66 @@ function createShopInfoElement(itemElement, shopcard) {
             itemElement.getElementsByClassName('item__wrap')[0].appendChild(shopInfoElement);
             break;
         default:
-            console('Unsupported state.');
+            console.log('Unsupported state.');
             break;
     }
 }
 
-function loadShopcard() {
-    $.ready(
-        $.get(document.URL, function (data, status) {
-            var re_p = /"auctions":([\s\S]*),"recommendAuctions"/;
-            var json_str = re_p.exec(data)
-            var j_data = JSON.parse(json_str[1]);
-            j_data.sort(function (a, b) {
-                // 由大到小排序
-                return b.shopcard.description[0] - a.shopcard.description[0]
-            })
 
-            for (let i = 0; i < j_data.length; i++) {
-                var element = j_data[i];
-                /*     shopcard:
-                        delivery: (3)[487, 1, 2464]
-                        description: (3)[488, 1, 1898]
-                        encryptedUserId: "UvCH0vm8GMCQGONTT"
-                        isTmall: true
-                        levelClasses: (4)[{ … }, { … }, { … }, { … }]
-                        sellerCredit: 14
-                        service: (3)[488, 1, 3326]
-                        totalRate: 10000 */
 
-                var e = document.querySelector('#J_Itemlist_TLink_' + element.nid.toString());
-                console.log(element.nid, 'a1')
-                if (e) {
-                    var e_item = e.closest('div.J_MouserOnverReq');
-                    console.log(element.nid, 'a2')
-                    if (element.shopcard.description[1] <= 0 && element.shopcard.service[1] <= 0) {
-                        e_item.style.display = 'none';
-                    } else {
-                        createShopInfoElement(e_item, element.shopcard);
-                        e_item.parentElement.appendChild(e_item);
-                    }
-                }
+function loadShopcard(data) {
+
+    var re_p = /"auctions":([\s\S]*),"recommendAuctions"/;
+    var json_str = re_p.exec(data)
+    var j_data = JSON.parse(json_str[1]);
+    j_data.sort(function (a, b) {
+        // 由大到小排序
+        return b.shopcard.description[0] - a.shopcard.description[0]
+    })
+
+    for (let i = 0; i < j_data.length; i++) {
+        var element = j_data[i];
+        /*     shopcard:
+                delivery: (3)[487, 1, 2464]
+                description: (3)[488, 1, 1898]
+                encryptedUserId: "UvCH0vm8GMCQGONTT"
+                isTmall: true
+                levelClasses: (4)[{ … }, { … }, { … }, { … }]
+                sellerCredit: 14
+                service: (3)[488, 1, 3326]
+                totalRate: 10000 */
+
+        var e = document.querySelector(`.shop a[data-nid="${element.nid}"]`);
+        //console.log(element.nid, 'a1',`.shop a[data-nid="${element.nid}]"`,e);
+        if (e) {
+            var e_item = e.closest('div.item');
+            console.log(element.nid, 'a2');
+            if (element.shopcard.description[1] <= 0 && element.shopcard.service[1] <= 0) {
+                e_item.style.display = 'none';
+            } else {
+                createShopInfoElement(e_item, element.shopcard);
+                e_item.parentElement.appendChild(e_item);
             }
-        })
-    );
+        }
+    }
 }
 
-setInterval(() => {
-    if (document.querySelector('.score-box')) {
-        // 检查是否已经添加shopcard
-        return;
-    }
-    if (document.querySelector('.item .shop')) {
-        //等待元素渲染完成
-        loadShopcard();
-    }
-}, 2000);
+$.ready(
+    $.get(document.URL, function (data, status) {
+        setInterval(() => {
+            if (document.querySelector('.score-box')) {
+                // 检查是否已经添加shopcard
+                return;
+            }
+            if (document.querySelector('.item .shop')) {
+                //等待元素渲染完成
+                loadShopcard(data);
+            }
+        }, 2000);
+    })
+)
+
+
 
 ///
 /* 注入 shopcard style */
@@ -147,3 +151,6 @@ var style_tb = `
     }
 `;
 GM_addStyle_from_string(style_tb);
+
+
+
