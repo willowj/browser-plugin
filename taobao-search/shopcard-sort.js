@@ -64,6 +64,7 @@ function loadShopcard(data) {
     var re_p = /"auctions":([\s\S]*),"recommendAuctions"/;
     var json_str = re_p.exec(data)
     var j_data = JSON.parse(json_str[1]);
+    j_data = j_data.filter(function (a) { return a.shopcard })
     j_data.sort(function (a, b) {
         // 由大到小排序
         return b.shopcard.description[0] - a.shopcard.description[0]
@@ -98,13 +99,14 @@ function loadShopcard(data) {
 
 $.ready(
     $.get(document.URL, function (data, status) {
+        console.log('get data');
         setInterval(() => {
             if (document.querySelector('.score-box')) {
                 // 检查是否已经添加shopcard
                 return;
             }
             if (document.querySelector('.item .shop')) {
-                //等待元素渲染完成
+                //等待元素渲染完成后添加shopcard
                 loadShopcard(data);
             }
         }, 2000);
